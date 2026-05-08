@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Bible</title>
+    <!-- Pretendard 폰트 (현대적이고 깔끔한 한글 폰트) -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    
+    <style>
+        :root {
+            --bg-color: #fbfbfb;
+            --text-color: #2c2c2c;
+            --text-muted: #888888;
+            --accent-color: #4a5568;
+            --header-bg: rgba(251, 251, 251, 0.85);
+            --border-color: #eaeaea;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.8;
+            letter-spacing: -0.02em;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 글래스모피즘 상단 네비게이션바 */
+        header {
+            position: sticky;
+            top: 0;
+            background-color: var(--header-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .select-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        select {
+            appearance: none;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            padding: 0.6rem 2rem 0.6rem 1rem;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            color: var(--text-color);
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s ease;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.7rem center;
+            background-size: 1em;
+        }
+
+        select:hover, select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(74, 85, 104, 0.1);
+        }
+
+        /* 본문 컨테이너 */
+        main {
+            max-width: 768px;
+            margin: 0 auto;
+            padding: 3rem 2rem 6rem;
+        }
+
+        .chapter-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--accent-color);
+        }
+
+        /* 성경 구절 스타일링 */
+        .verse-container {
+            display: flex;
+            margin-bottom: 1.5rem;
+            transition: background-color 0.2s ease;
+            border-radius: 8px;
+            padding: 0.5rem;
+        }
+
+        .verse-container:hover {
+            background-color: #f0f4f8;
+        }
+
+        .verse-num {
+            min-width: 2.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            opacity: 0.7;
+            padding-top: 0.2rem;
+            user-select: none;
+        }
+
+        .verse-text {
+            font-size: 1.15rem;
+            font-weight: 400;
+            color: var(--text-color);
+            word-break: keep-all;
+        }
+
+        /* 로딩 스피너 및 에러 메시지 */
+        #status-message {
+            text-align: center;
+            margin-top: 5rem;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* 다크모드 지원 (기기 설정에 따라 자동 전환) */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #121212;
+                --text-color: #e0e0e0;
+                --text-muted: #888888;
+                --accent-color: #a0aec0;
+                --header-bg: rgba(18, 18, 18, 0.85);
+                --border-color: #2d3748;
+            }
+            select {
+                background-color: #1e1e1e;
+                color: #e0e0e0;
+            }
+            .verse-container:hover {
+                background-color: #1e293b;
+            }
+        }
+
+        /* 모바일 최적화 */
+        @media (max-width: 600px) {
+            header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .select-group {
+                width: 100%;
+            }
+            select {
+                flex: 1;
+                font-size: 0.95rem;
+            }
+            .chapter-title {
+                font-size: 2rem;
+                margin-top: 1rem;
+                margin-bottom: 2rem;
+            }
+            .verse-text {
+                font-size: 1.05rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="select-group">
+            <select id="book-select">
+                <option value="">성경을 불러오는 중...</option>
+            </select>
+            <select id="chapter-select" disabled>
+                <option value="">장 선택</option>
+            </select>
+        </div>
+    </header>
+
+    <main>
+        <div id="status-message">데이터를 불러오고 있습니다...</div>
+        <div id="bible-content" style="display: none;">
+            <h1 class="chapter-title" id="chapter-title"></h1>
+            <div id="verses-wrapper"></div>
+        </div>
+    </main>
+
+    <script>
+        /**
+         * [주의 사항]
+         * pb.json 파일의 구조에 따라 아래 데이터를 파싱하는 로직을 약간 수정해야 할 수 있습니다.
+         * 이 코드는 pb.json이 다음과 같은 배열 구조라고 가정하고 작성되었습니다:
+         * [
+         *   { "book": "창세기", "chapter": 1, "verse": 1, "content": "태초에 하나님이 천지를 창조하시니라" },
+         *   { "book": "창세기", "chapter": 1, "verse": 2, "content": "땅이 혼돈하고..." }
+         * ]
+         */
+
+        let bibleData = [];
+        let bookNames = [];
+        
+        const bookSelect = document.getElementById('book-select');
+        const chapterSelect = document.getElementById('chapter-select');
+        const statusMessage = document.getElementById('status-message');
+        const bibleContent = document.getElementById('bible-content');
+        const chapterTitle = document.getElementById('chapter-title');
+        const versesWrapper = document.getElementById('verses-wrapper');
+
+        // JSON 데이터 불러오기
+        async function loadBibleData() {
+            try {
+                const response = await fetch('./pb.json');
+                if (!response.ok) throw new Error('네트워크 응답이 정상이 아닙니다.');
+                
+                bibleData = await response.json();
+                initializeSelectors();
+                
+            } catch (error) {
+                statusMessage.innerHTML = `데이터를 불러오는 데 실패했습니다.<br><br><small>오류: ${error.message}</small><br><small>pb.json 파일이 index.html과 같은 폴더에 있는지 확인해주세요.</small>`;
+                console.error("Error loading JSON:", error);
+            }
+        }
+
+        // 셀렉트 박스 초기화 (책 목록 추출)
+        function initializeSelectors() {
+            // 중복을 제거하여 성경 책 이름 배열 생성
+            const uniqueBooks = [...new Set(bibleData.map(item => item.book))];
+            bookNames = uniqueBooks;
+
+            bookSelect.innerHTML = '<option value="">성경 선택</option>';
+            bookNames.forEach(book => {
+                const option = document.createElement('option');
+                option.value = book;
+                option.textContent = book;
+                bookSelect.appendChild(option);
+            });
+
+            statusMessage.textContent = '상단에서 성경과 장을 선택해주세요.';
+        }
+
+        // 책을 선택했을 때 장(Chapter) 목록 업데이트
+        bookSelect.addEventListener('change', (e) => {
+            const selectedBook = e.target.value;
+            chapterSelect.innerHTML = '<option value="">장 선택</option>';
+            
+            if (!selectedBook) {
+                chapterSelect.disabled = true;
+                bibleContent.style.display = 'none';
+                statusMessage.style.display = 'block';
+                return;
+            }
+
+            // 선택된 책의 데이터만 필터링하여 장(Chapter) 목록 추출
+            const bookData = bibleData.filter(item => item.book === selectedBook);
+            const uniqueChapters = [...new Set(bookData.map(item => item.chapter))].sort((a, b) => a - b);
+
+            uniqueChapters.forEach(chapter => {
+                const option = document.createElement('option');
+                option.value = chapter;
+                option.textContent = `${chapter}장`;
+                chapterSelect.appendChild(option);
+            });
+
+            chapterSelect.disabled = false;
+            
+            // 책을 바꾸면 기본적으로 1장을 보여주도록 설정 (선택적)
+            chapterSelect.value = uniqueChapters[0];
+            chapterSelect.dispatchEvent(new Event('change'));
+        });
+
+        // 장을 선택했을 때 구절(Verse) 화면에 렌더링
+        chapterSelect.addEventListener('change', (e) => {
+            const selectedBook = bookSelect.value;
+            const selectedChapter = e.target.value;
+
+            if (!selectedBook || !selectedChapter) return;
+
+            // 로딩 UI 처리
+            statusMessage.style.display = 'none';
+            bibleContent.style.display = 'block';
+            versesWrapper.innerHTML = '';
+            
+            // 타이틀 설정
+            chapterTitle.textContent = `${selectedBook} ${selectedChapter}장`;
+
+            // 선택된 책과 장의 구절 데이터 필터링
+            const chapterData = bibleData.filter(item => 
+                item.book === selectedBook && String(item.chapter) === String(selectedChapter)
+            ).sort((a, b) => a.verse - b.verse); // 구절 순서대로 정렬
+
+            // 구절 HTML 생성 및 추가
+            chapterData.forEach(item => {
+                const verseDiv = document.createElement('div');
+                verseDiv.className = 'verse-container';
+                
+                const verseNum = document.createElement('div');
+                verseNum.className = 'verse-num';
+                verseNum.textContent = item.verse;
+                
+                const verseText = document.createElement('div');
+                verseText.className = 'verse-text';
+                verseText.textContent = item.content; // JSON 파일의 키 값에 맞게 변경하세요 (예: item.text)
+
+                verseDiv.appendChild(verseNum);
+                verseDiv.appendChild(verseText);
+                versesWrapper.appendChild(verseDiv);
+            });
+
+            // 화면을 맨 위로 부드럽게 스크롤
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // 앱 실행
+        loadBibleData();
+    </script>
+</body>
+</html>
